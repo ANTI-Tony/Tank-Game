@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Tank.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tanks</a> &gt; <a href="index.source.html" class="el_package">Tanks</a> &gt; <span class="el_source">Tank.java</span></div><h1>Tank.java</h1><pre class="source lang-java linenums">package Tanks;
+
+import processing.core.PImage;
+import java.util.ArrayList;
+
+import static Tanks.App.tanks;
+
+/**
+ * Represents a tank in the game.
+ */
+public class Tank {
+    private int x;
+    private int y;
+    private final int r;
+    private final int g;
+    private final int b;
+<span class="fc" id="L17">    private int health = 100;</span>
+    private int fuel;
+    private int power;
+    private int parachutes;
+<span class="fc" id="L21">    private int scoreGained = 0;</span>
+    private float turretAngle;
+<span class="fc" id="L23">    public static float PI = (float) Math.PI;</span>
+<span class="fc" id="L24">    static float turretAngleSpeed = (float) Math.PI / 2f; // Rotate 3 radians per second</span>
+<span class="fc" id="L25">    static int moveSpeed = 60; // Move 60 pixels per second</span>
+<span class="fc" id="L26">    static int powerChangeRate = 36; // Power changes by 36 units per second</span>
+    private final String playerName;
+<span class="fc" id="L28">    public boolean isCurrentTurn = false;</span>
+<span class="fc" id="L29">    private boolean isSelectingTeleport = false;</span>
+<span class="fc" id="L30">    boolean isUsingParachute = false;</span>
+<span class="fc" id="L31">    ArrayList&lt;Projectile&gt; projectiles = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Constructs a new Tank object.
+     *
+     * @param name the name of the player controlling the tank
+     * @param x    the x-coordinate of the tank's position
+     * @param y    the y-coordinate of the tank's position
+     * @param r    the red component of the tank's color
+     * @param g    the green component of the tank's color
+     * @param b    the blue component of the tank's color
+     */
+<span class="fc" id="L43">    public Tank(String name, int x, int y, int r, int g, int b) {</span>
+<span class="fc" id="L44">        this.x = x;</span>
+<span class="fc" id="L45">        this.y = y;</span>
+<span class="fc" id="L46">        this.r = r;</span>
+<span class="fc" id="L47">        this.g = g;</span>
+<span class="fc" id="L48">        this.b = b;</span>
+<span class="fc" id="L49">        this.fuel = 250; // Initial fuel is 250</span>
+<span class="fc" id="L50">        this.power = 50; // Initial power is 50</span>
+<span class="fc" id="L51">        this.parachutes = App.INITIAL_PARACHUTES; // Initial number of parachutes</span>
+<span class="fc" id="L52">        this.turretAngle = -PI/2; // Initial turret angle is -90 degrees (pointing vertically upwards)</span>
+<span class="fc" id="L53">        this.playerName = name;</span>
+<span class="fc" id="L54">    }</span>
+
+    public int getR() {
+<span class="fc" id="L57">        return r;</span>
+    }
+
+    public int getG() {
+<span class="fc" id="L61">        return g;</span>
+    }
+
+    public int getB() {
+<span class="fc" id="L65">        return b;</span>
+    }
+
+    /**
+     * Moves the tank to the left.
+     */
+    public static void moveLeft() {
+<span class="fc" id="L72">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="fc" id="L73">        int newX = currentTank.getX() - moveSpeed / App.FPS;</span>
+<span class="fc" id="L74">        int newY = App.terrainHeightArray[newX];</span>
+<span class="fc" id="L75">        int fuelConsumed = currentTank.getX() - newX; // Calculate the fuel consumed</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (currentTank.getFuel() &gt;= fuelConsumed) { // If there is enough fuel</span>
+<span class="fc" id="L77">            currentTank.setX(newX);</span>
+<span class="fc" id="L78">            currentTank.setY(newY);</span>
+<span class="fc" id="L79">            currentTank.setFuel(currentTank.getFuel() - fuelConsumed); // Reduce the fuel</span>
+        }
+<span class="fc" id="L81">    }</span>
+
+    /**
+     * Moves the tank to the right.
+     */
+    public static void moveRight() {
+<span class="fc" id="L87">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="fc" id="L88">        int newX = currentTank.getX() + moveSpeed / App.FPS;</span>
+<span class="fc" id="L89">        int newY = App.terrainHeightArray[newX];</span>
+<span class="fc" id="L90">        int fuelConsumed = newX - currentTank.getX(); // Calculate the fuel consumed</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (currentTank.getFuel() &gt;= fuelConsumed) { // If there is enough fuel</span>
+<span class="fc" id="L92">            currentTank.setX(newX);</span>
+<span class="fc" id="L93">            currentTank.setY(newY);</span>
+<span class="fc" id="L94">            currentTank.setFuel(currentTank.getFuel() - fuelConsumed); // Reduce the fuel</span>
+        }
+<span class="fc" id="L96">    }</span>
+
+    /**
+     * Moves the tank's turret to the left.
+     */
+    public static void turretMoveLeft() {
+<span class="nc" id="L102">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="nc" id="L103">        currentTank.setTurretAngle(constrain(currentTank.getTurretAngle() + turretAngleSpeed / App.FPS, -PI, 0));</span>
+<span class="nc" id="L104">    }</span>
+
+    /**
+     * Moves the tank's turret to the right.
+     */
+    public static void turretMoveRight() {
+<span class="fc" id="L110">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="fc" id="L111">        currentTank.setTurretAngle(constrain(currentTank.getTurretAngle() - turretAngleSpeed / App.FPS, -PI, 0));</span>
+<span class="fc" id="L112">    }</span>
+
+    private static float constrain(float value, float min, float max) {
+<span class="fc" id="L115">        return Math.max(min, Math.min(max, value));</span>
+    }
+
+    /**
+     * Increases the tank's power level.
+     */
+    public static void increasePower() {
+<span class="fc" id="L122">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="fc" id="L123">        int newPower = currentTank.getPower() + powerChangeRate / App.FPS;</span>
+<span class="fc" id="L124">        newPower = Math.min(newPower, currentTank.getHealth()); // Ensure power does not exceed health</span>
+<span class="fc" id="L125">        currentTank.setPower(newPower);</span>
+<span class="fc" id="L126">    }</span>
+
+    /**
+     * Decreases the tank's power level.
+     */
+    public static void decreasePower() {
+<span class="nc" id="L132">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="nc" id="L133">        int newPower = currentTank.getPower() - powerChangeRate / App.FPS;</span>
+<span class="nc" id="L134">        newPower = Math.max(newPower, 0); // Ensure power does not go below 0</span>
+<span class="nc" id="L135">        currentTank.setPower(newPower);</span>
+<span class="nc" id="L136">    }</span>
+
+    /**
+     * Fires a projectile from the tank.
+     */
+    public static void fireProjectile() {
+        // If the current player is dead, switch to the next player
+<span class="fc bfc" id="L143" title="All 2 branches covered.">        while (tanks.get(App.currentPlayerIndex).getHealth() &lt;= 0) {</span>
+<span class="fc" id="L144">            App.currentPlayerIndex = (App.currentPlayerIndex + 1) % tanks.size();</span>
+        }
+
+        // Get the current player's tank based on currentPlayerIndex
+<span class="fc" id="L148">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+
+        // Ensure the power level does not exceed the tank's health
+<span class="fc" id="L151">        int power = Math.min(currentTank.getPower(), currentTank.getHealth());</span>
+
+<span class="fc" id="L153">        Projectile projectile = new Projectile(currentTank.getX(), currentTank.getY(), currentTank.getTurretAngle(), power, currentTank.getR(), currentTank.getG(), currentTank.getB(), currentTank.getPlayerName());</span>
+<span class="fc" id="L154">        currentTank.projectiles.add(projectile);</span>
+
+<span class="fc" id="L156">        Tank nextTank = tanks.get((Tanks.App.currentPlayerIndex + 1) % tanks.size());</span>
+<span class="fc" id="L157">        nextTank.setIsCurrentTurn(true); // Set the flag for the next player to true</span>
+<span class="fc" id="L158">    }</span>
+
+    /**
+     * Uses a repair kit to restore the tank's health.
+     */
+    public static void useRepairKit() {
+<span class="fc" id="L164">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (currentTank.getScoreGained() &gt;= 20) {</span>
+<span class="nc" id="L166">            currentTank.setHealth(Math.min(currentTank.getHealth() + 20, 100));</span>
+<span class="nc" id="L167">            currentTank.addScore(-20); // Deduct the spent 20 points</span>
+        }
+<span class="fc" id="L169">    }</span>
+
+    /**
+     * Adds fuel to the tank.
+     */
+    public static void addFuel() {
+<span class="fc" id="L175">        Tank currentTank = tanks.get(App.currentPlayerIndex);</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (currentTank.getScoreGained() &gt;= 10) {</span>
+<span class="fc" id="L177">            currentTank.setFuel(currentTank.getFuel() + 200);</span>
+<span class="fc" id="L178">            currentTank.addScore(-10); // Deduct the spent 10 points</span>
+        }
+<span class="fc" id="L180">    }</span>
+
+    public int getScoreGained() {
+<span class="fc" id="L183">        return scoreGained;</span>
+    }
+
+    /**
+     * Adds the specified score to the tank's score.
+     *
+     * @param score the score to add
+     */
+    public void addScore(int score) {
+<span class="fc" id="L192">        scoreGained += score;</span>
+<span class="fc" id="L193">    }</span>
+
+    public boolean isSelectingTeleport() {
+<span class="fc" id="L196">        return isSelectingTeleport;</span>
+    }
+
+    public void setSelectingTeleport(boolean selectingTeleport) {
+<span class="fc" id="L200">        isSelectingTeleport = selectingTeleport;</span>
+<span class="fc" id="L201">    }</span>
+
+    /**
+     * Slows down the tank's fall when using a parachute.
+     */
+    public void slowFall() {
+<span class="fc bfc" id="L207" title="All 4 branches covered.">        if (isUsingParachute &amp;&amp; y &lt; App.terrainHeightArray[x]) {</span>
+<span class="fc" id="L208">            y += 30 / App.FPS; // Slowly descend 60 pixels per second</span>
+        } else {
+<span class="fc" id="L210">            isUsingParachute = false;</span>
+        }
+<span class="fc" id="L212">    }</span>
+
+    /**
+     * Makes the tank fall quickly when not using a parachute.
+     */
+    public void fastFall() {
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        if (y &lt; App.terrainHeightArray[x]) {</span>
+<span class="fc" id="L219">            int fallDistance = Math.min(120 / App.FPS, App.terrainHeightArray[x] - y); // Quickly descend 120 pixels per second</span>
+<span class="fc" id="L220">            y += fallDistance;</span>
+<span class="fc" id="L221">            health -= fallDistance;</span>
+
+            // Add the damage value to the score of the player who fired the projectile that caused the terrain destruction
+<span class="fc" id="L224">            Tank firingTank = App.tanks.get(App.currentPlayerIndex);</span>
+<span class="fc" id="L225">            firingTank.addScore(fallDistance);</span>
+        }
+<span class="fc" id="L227">    }</span>
+
+    // getter setter
+    public int getX() {
+<span class="fc" id="L231">        return x;</span>
+    }
+
+    public void setX(int x) {
+<span class="fc" id="L235">        this.x = x;</span>
+<span class="fc" id="L236">    }</span>
+
+    public int getY() {
+<span class="fc" id="L239">        return y;</span>
+    }
+
+    public void setY(int y) {
+<span class="fc" id="L243">        this.y = y;</span>
+<span class="fc" id="L244">    }</span>
+
+    public int getHealth() {
+<span class="fc" id="L247">        return health;</span>
+    }
+
+    public void setHealth(int health) {
+<span class="fc" id="L251">        this.health = health;</span>
+<span class="fc" id="L252">    }</span>
+
+    public int getFuel() {
+<span class="fc" id="L255">        return fuel;</span>
+    }
+
+    public void setFuel(int fuel) {
+<span class="fc" id="L259">        this.fuel = fuel;</span>
+<span class="fc" id="L260">    }</span>
+
+    public int getPower() {
+<span class="fc" id="L263">        return power;</span>
+    }
+
+    public void setPower(int power) {
+<span class="fc" id="L267">        this.power = power;</span>
+<span class="fc" id="L268">    }</span>
+
+    public int getParachutes() {
+<span class="fc" id="L271">        return parachutes;</span>
+    }
+
+    public void setParachutes(int parachutes) {
+<span class="fc" id="L275">        this.parachutes = parachutes;</span>
+<span class="fc" id="L276">    }</span>
+
+    public float getTurretAngle() {
+<span class="fc" id="L279">        return turretAngle;</span>
+    }
+
+    public void setTurretAngle(float angle) {
+<span class="fc" id="L283">        this.turretAngle = angle;</span>
+<span class="fc" id="L284">    }</span>
+
+    public void setIsCurrentTurn(boolean isCurrentTurn) {
+<span class="fc" id="L287">        this.isCurrentTurn = isCurrentTurn;</span>
+<span class="fc" id="L288">    }</span>
+
+    public String getPlayerName() {
+<span class="fc" id="L291">        return playerName;</span>
+    }
+
+    /**
+     * Draws the tank on the screen.
+     *
+     * @param app the App object representing the game
+     */
+    public void draw(App app) {
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (isUsingParachute) {</span>
+<span class="fc" id="L301">            PImage parachuteImage = app.loadImage(&quot;Tanks/parachute.png&quot;);</span>
+<span class="fc" id="L302">            app.image(parachuteImage, x - 15 - 15/2, y - 50, 50, 50);</span>
+<span class="fc" id="L303">            slowFall();</span>
+<span class="fc" id="L304">        } else {</span>
+<span class="fc" id="L305">            fastFall();</span>
+        }
+
+        // Draw the tank image here
+<span class="fc" id="L309">        app.stroke(255); // Black outline</span>
+<span class="fc" id="L310">        app.strokeWeight(0); // Outline thickness</span>
+<span class="fc" id="L311">        app.fill(r, g, b); // Fill the tank color</span>
+<span class="fc" id="L312">        app.rect(x + 3 - 15/2, y - 4, 15, 4);</span>
+<span class="fc" id="L313">        app.rect(x - 15/2, y, 20, 4); // Draw the main body rectangle of the tank</span>
+        // Draw the barrel
+<span class="fc" id="L315">        app.fill(0);</span>
+<span class="fc" id="L316">        app.pushMatrix();</span>
+<span class="fc" id="L317">        app.translate(x+10-15/2, y+2);</span>
+<span class="fc" id="L318">        app.rotate(turretAngle);</span>
+<span class="fc" id="L319">        app.rect(0, -2, 15, 4);</span>
+<span class="fc" id="L320">        app.popMatrix();</span>
+
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">        if (isSelectingTeleport) {</span>
+<span class="nc" id="L323">            app.fill(255, 255, 0, 128);</span>
+<span class="nc" id="L324">            app.ellipse(app.mouseX, app.mouseY, 30, 30);</span>
+        }
+<span class="fc" id="L326">    }</span>
+
+    public void setUsingParachute(boolean usingParachute) {
+<span class="fc" id="L329">        isUsingParachute = usingParachute;</span>
+<span class="fc" id="L330">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

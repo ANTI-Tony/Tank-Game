@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Projectile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tanks</a> &gt; <a href="index.source.html" class="el_package">Tanks</a> &gt; <span class="el_source">Projectile.java</span></div><h1>Projectile.java</h1><pre class="source lang-java linenums">package Tanks;
+
+import processing.core.PVector;
+import processing.core.PApplet;
+
+/**
+ * Represents a projectile fired by a tank.
+ */
+public class Projectile {
+    float x;
+    float y;  // position of the shell
+    private float vx, vy;  // The speed of the cannonball
+    int r;
+    int g;
+    int b;  // The color of the shell (same as the tank it was fired from)
+    float power;  // Initial strength of the shell
+<span class="fc" id="L17">    public boolean exploded = false;</span>
+    public float explodeX;
+    public float explodeY;
+<span class="fc" id="L20">    public float explosionRadius = 30;</span>
+    public int explodeStartTime;
+    public static final float GRAVITY = 3.6f/App.FPS;
+    private final PVector wind;
+    String name;
+
+    /**
+     * Constructs a new Projectile object.
+     *
+     * @param x     the x-coordinate of the projectile's initial position
+     * @param y     the y-coordinate of the projectile's initial position
+     * @param angle the angle at which the projectile is fired
+     * @param power the power of the projectile
+     * @param r     the red component of the projectile's color
+     * @param g     the green component of the projectile's color
+     * @param b     the blue component of the projectile's color
+     * @param name  the name of the player who fired the projectile
+     */
+<span class="fc" id="L38">    public Projectile(float x, float y, float angle, float power, int r, int g, int b, String name) {</span>
+<span class="fc" id="L39">        this.x = x;</span>
+<span class="fc" id="L40">        this.y = y;</span>
+<span class="fc" id="L41">        this.power = power;</span>
+<span class="fc" id="L42">        this.r = r;</span>
+<span class="fc" id="L43">        this.g = g;</span>
+<span class="fc" id="L44">        this.b = b;</span>
+<span class="fc" id="L45">        this.name = name;</span>
+<span class="fc" id="L46">        this.wind = new PVector(App.wind, 0);</span>
+
+        // The initial velocity is calculated based on the launch Angle and fire power
+<span class="fc" id="L49">        float speed = map(power, 0, 100, 1, 9); // Mapping fire to speed ranges [1, 9]</span>
+<span class="fc" id="L50">        vx = speed * cos(angle);</span>
+<span class="fc" id="L51">        vy = speed * sin(angle);</span>
+<span class="fc" id="L52">    }</span>
+
+    /**
+     * Updates the position and state of the projectile.
+     */
+    public void update() {
+        // Update projectile position
+<span class="fc" id="L59">        x += vx;</span>
+<span class="fc" id="L60">        y += vy;</span>
+<span class="fc" id="L61">        vy += GRAVITY; // Apply gravity acceleration</span>
+
+        // Apply wind force
+<span class="fc" id="L64">        vx += wind.x * 0.002f; // Acceleration approximately equal to wind * 0.002</span>
+
+
+        // Check if the projectile hits the terrain
+<span class="pc bpc" id="L68" title="2 of 4 branches missed.">        if (x &gt;= 0 &amp;&amp; x &lt; App.terrainHeightArray.length) {</span>
+<span class="fc" id="L69">            int terrainHeight = App.terrainHeightArray[(int)x];</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (y &gt;= terrainHeight) {</span>
+<span class="nc" id="L71">                explode(x, terrainHeight);</span>
+            }
+        }
+<span class="fc" id="L74">    }</span>
+
+    /**
+     * Explodes the projectile at the specified position.
+     *
+     * @param x the x-coordinate of the explosion position
+     * @param y the y-coordinate of the explosion position
+     */
+    public void explode(float x, float y) {
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (!exploded) {</span>
+<span class="fc" id="L84">            exploded = true;</span>
+<span class="fc" id="L85">            explodeX = x;</span>
+<span class="fc" id="L86">            explodeY = y;</span>
+<span class="fc" id="L87">            explodeStartTime = App.instance.millis();</span>
+
+            // Explosion radius
+<span class="fc" id="L90">            float explosionRadius = 30;</span>
+
+            // Destroy terrain
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            for (int col = (int)(x - explosionRadius); col &lt;= (int)(x + explosionRadius); col++) {</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">                if (col &gt;= 0 &amp;&amp; col &lt; App.terrainHeightArray.length) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">                    for (int row = (int)(y - explosionRadius); row &lt;= (int)(y + explosionRadius); row++) {</span>
+<span class="pc bpc" id="L96" title="1 of 4 branches missed.">                        if (row &gt;= 0 &amp;&amp; row &lt; App.HEIGHT) {</span>
+<span class="fc" id="L97">                            float distance = dist(col, row, x, y);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                            if (distance &lt;= explosionRadius) {</span>
+<span class="fc" id="L99">                                App.terrain[row][col] = 0;</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">                                if (row &gt; App.terrainHeightArray[col]) {</span>
+<span class="fc" id="L101">                                    App.terrainHeightArray[col] = row;</span>
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Make the destroyed terrain &quot;fall down&quot;
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            for (int col = (int) (x - explosionRadius); col &lt;= (int) (x + explosionRadius); col++) {</span>
+<span class="pc bpc" id="L111" title="1 of 4 branches missed.">                if (col &gt;= 0 &amp;&amp; col &lt; App.terrainHeightArray.length) {</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">                    for (int row = App.terrainHeightArray[col]; row &lt; App.HEIGHT; row++) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                        if (App.terrain[row][col] == 0) {</span>
+<span class="fc" id="L114">                            App.terrain[row][col] = 1;</span>
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+<span class="fc bfc" id="L122" title="All 2 branches covered.">            for (Tank tank : App.tanks) {</span>
+<span class="fc" id="L123">                float distance = PApplet.dist(x, y, tank.getX(), tank.getY());</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">                if (distance &lt;= explosionRadius) {</span>
+<span class="fc" id="L125">                    float damage = PApplet.map(distance, 0, explosionRadius, 60, 0);</span>
+<span class="fc" id="L126">                    tank.setHealth(tank.getHealth() - (int) damage);</span>
+
+                    // Add the damage value as a score to the tank that fired the projectile
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">                    if (!tank.getPlayerName().equals(name)) {</span>
+<span class="nc" id="L130">                        App.tanks.get(name.charAt(0)-'A').addScore((int) damage);</span>
+<span class="nc" id="L131">                        App.playerScores[name.charAt(0)-'A'] += (int) damage; // 50</span>
+                    }
+
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">                    if (tank.getY() &lt; App.terrainHeightArray[tank.getX()]) {</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                        if (tank.getParachutes() &gt; 0) {</span>
+<span class="fc" id="L136">                            tank.setParachutes(tank.getParachutes() - 1);</span>
+<span class="fc" id="L137">                            tank.setUsingParachute(true);</span>
+                        }
+                    }
+                }
+<span class="fc" id="L141">            }</span>
+        }
+<span class="fc" id="L143">    }</span>
+
+    /**
+     * Draws the projectile on the screen.
+     *
+     * @param app the App object representing the game
+     */
+    public void draw(App app) {
+        // Draw the projectile
+<span class="fc" id="L152">        app.fill(r, g, b);</span>
+        // Projectile radius
+<span class="fc" id="L154">        float radius = 5;</span>
+<span class="fc" id="L155">        app.ellipse(x, y, radius * 2, radius * 2);</span>
+<span class="fc" id="L156">    }</span>
+
+    // Helper methods
+    private float cos(float angle) {
+<span class="fc" id="L160">        return (float)Math.cos(angle);</span>
+    }
+
+    private float sin(float angle) {
+<span class="fc" id="L164">        return (float)Math.sin(angle);</span>
+    }
+
+    private float dist(float x1, float y1, float x2, float y2) {
+<span class="fc" id="L168">        return (float)Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));</span>
+    }
+
+    private float map(float value, float start1, float stop1, float start2, float stop2) {
+<span class="fc" id="L172">        return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
